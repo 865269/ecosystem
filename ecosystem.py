@@ -41,9 +41,29 @@ class Rabbit(Animal):
     def move(self):
         x, y = self.pos
 
-        dx, dy = self.random.choice([-1, 0, 1]), self.random.choice([-1, 0, 1])
-        new_pos = ((x + dx) % self.model.grid.width,
-                   (y + dy) % self.model.grid.height)
+        neighbor_positions = self.model.grid.get_neighborhood((x, y), moore=True, include_center=False)
+
+        safe_positions = []
+        for pos in neighbor_positions:
+            if not any(isinstance(agent, Fox) for agent in self.model.grid.get_cell_list_contents([pos])):
+                safe_positions.append(pos)
+
+        if len(safe_positions) == 0:
+            # If no safe positions, stay in place
+            return
+
+        positions_with_grass = []
+        for pos in safe_positions:
+            if any(isinstance(agent, Grass) and agent.fully_grown for agent in self.model.grid.get_cell_list_contents([pos])):
+                positions_with_grass.append(pos)
+
+        new_pos = self.pos
+        if len(positions_with_grass) > 0 and self.energy < 30:
+            new_pos = self.random.choice(positions_with_grass)
+        else:
+            dx, dy = self.random.choice([-1, 0, 1]), self.random.choice([-1, 0, 1])
+            new_pos = ((x + dx) % self.model.grid.width,
+                       (y + dy) % self.model.grid.height)
 
         self.model.grid.move_agent(self, new_pos)
 
@@ -101,7 +121,7 @@ class Grass(Agent):
 
 
 class Ecosystem(Model):
-    def __init__(self, width=20, height=20, N_rabbits=50, N_foxes=5, N_grass=100, animal_energy=100):
+    def __init__(self, width=20, height=20, N_rabbits=50, N_foxes=5, N_grass=50, animal_energy=100):
         self.grid = MultiGrid(width, height, torus=True)
         self.schedule = RandomActivation(self)
 
@@ -117,6 +137,7 @@ class Ecosystem(Model):
             x, y = self.random.randrange(width), self.random.randrange(height)
             self.grid.place_agent(fox, (x, y))
 
+        # TODO make sure grass doesn't overlap with other grass
         for i in range(N_grass):
             grass = Grass(N_rabbits + N_foxes + i, self)
             self.schedule.add(grass)

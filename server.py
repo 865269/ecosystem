@@ -5,7 +5,7 @@ from ecosystem import Ecosystem, Rabbit, Fox, Grass
 
 def agent_portrayal(agent):
     if isinstance(agent, Rabbit):
-        return {"Shape": "circle", "Color": "grey", "r": 0.5, "Layer": 0}
+        return {"Shape": "circle", "Color": "blue", "r": 0.5, "Layer": 0}
     elif isinstance(agent, Fox):
         return {"Shape": "circle", "Color": "red", "r": 0.7, "Layer": 0}
     elif isinstance(agent, Grass):
@@ -16,6 +16,7 @@ class PopulationCount(TextElement):
     def render(self, model):
         rabbit_count = sum(isinstance(a, Rabbit) for a in model.schedule.agents)
         fox_count = sum(isinstance(a, Fox) for a in model.schedule.agents)
+        # TODO add fully grown grass count
         return f"Rabbit count: {rabbit_count} | Fox count: {fox_count}"
 
 
