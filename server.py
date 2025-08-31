@@ -1,13 +1,15 @@
 from mesa.visualization.modules import CanvasGrid, TextElement
 from mesa.visualization.UserParam import Slider
 from mesa.visualization.ModularVisualization import ModularServer
-from ecosystem import Ecosystem, Rabbit, Fox
+from ecosystem import Ecosystem, Rabbit, Fox, Grass
 
 def agent_portrayal(agent):
     if isinstance(agent, Rabbit):
-        return {"Shape": "circle", "Color": "green", "r": 0.5, "Layer": 0}
+        return {"Shape": "circle", "Color": "grey", "r": 0.5, "Layer": 0}
     elif isinstance(agent, Fox):
         return {"Shape": "circle", "Color": "red", "r": 0.7, "Layer": 0}
+    elif isinstance(agent, Grass):
+        return {"Shape": "circle", "Color": "green", "r": 0.3, "Layer": 0}
     return {}
 
 class PopulationCount(TextElement):

@@ -8,9 +8,9 @@ class Animal(Agent):
         self.energy = energy
 
     def remove(self):
-        self.model.grid.remove_agent(self)
         self.model.schedule.remove(self)
-    
+        self.model.grid.remove_agent(self)
+
     def reproduce(self):
         occupants = self.model.grid.get_cell_list_contents([self.pos])
         for agent in occupants:
@@ -47,6 +47,17 @@ class Rabbit(Animal):
 
         self.model.grid.move_agent(self, new_pos)
 
+    def feed(self):
+        occupants = self.model.grid.get_cell_list_contents([self.pos])
+        for agent in occupants:
+            if isinstance(agent, Grass):
+                if agent.fully_grown:
+                    self.energy += 20
+                    if self.energy > 100:
+                        self.energy = 100
+                    agent.be_eaten()
+                break
+
 
 class Fox(Animal):
 
@@ -66,14 +77,31 @@ class Fox(Animal):
                 self.energy += 20
                 if self.energy > 100:
                     self.energy = 100
-
-                self.model.grid.remove_agent(agent)
-                self.model.schedule.remove(agent)
+                agent.remove()
                 break
 
 
+class Grass(Agent):
+    def __init__(self, unique_id, model, fully_grown=True, regrow_time=10):
+        super().__init__(unique_id, model)
+        self.fully_grown = fully_grown
+        self.regrow_time = regrow_time
+        self.timer = 0
+
+    def step(self):
+        if not self.fully_grown:
+            self.timer += 1
+            if self.timer >= self.regrow_time:
+                self.fully_grown = True
+                self.timer = 0
+
+    def be_eaten(self):
+        self.fully_grown = False
+        self.timer = 0
+
+
 class Ecosystem(Model):
-    def __init__(self, width=20, height=20, N_rabbits=50, N_foxes=5, animal_energy=100):
+    def __init__(self, width=20, height=20, N_rabbits=50, N_foxes=5, N_grass=100, animal_energy=100):
         self.grid = MultiGrid(width, height, torus=True)
         self.schedule = RandomActivation(self)
 
@@ -88,6 +116,12 @@ class Ecosystem(Model):
             self.schedule.add(fox)
             x, y = self.random.randrange(width), self.random.randrange(height)
             self.grid.place_agent(fox, (x, y))
+
+        for i in range(N_grass):
+            grass = Grass(N_rabbits + N_foxes + i, self)
+            self.schedule.add(grass)
+            x, y = self.random.randrange(width), self.random.randrange(height)
+            self.grid.place_agent(grass, (x, y))
 
     def step(self):
         self.schedule.step()
