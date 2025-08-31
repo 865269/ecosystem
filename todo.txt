@@ -1,0 +1,4 @@
+- introduce parent animal class to contain common methods
+- rename prey to rabbit, predator to fox
+- introduce grass
+- allow rabbits to eat grass
